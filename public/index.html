@@ -2,54 +2,33 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>TopizioBot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EstiloBot</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
   
   <div class="chat-container">
     <div class="header">
-      <img src="Logo do TopizioBot com Mascote.png" alt="Logo do TopizioBot" class="logo">
-      <div>
-        <h1>TopizioBot</h1>
-        <p class="descricao">Bem-vindo ao TopizioBot! Estou aqui para ajudar com suas dúvidas e orientações. Envie uma mensagem para começarmos. 😊</p>
-      </div>
+     
+      <h1>EstiloBot</h1>
+      <p class="descricao">Seu personal stylist virtual.</p>
     </div>
 
     <div id="chat-box"></div>
 
     <form id="chat-form">
-      <input type="text" id="user-input" placeholder="Digite sua mensagem..." autocomplete="off" required />
-      <button type="submit">Enviar</button>
+      <input type="text" id="user-input" placeholder="Pergunte alguma coisa ;)" autocomplete="off" required />
+      <button type="submit">
+        <i class="fas fa-paper-plane"></i>
+      </button>
     </form>
   </div>
-
-  <!-- ================================================================= -->
-  <!--           INÍCIO DA NOVA SEÇÃO DE HISTÓRICO DE CONVERSAS          -->
-  <!-- ================================================================= -->
-  <hr>
-  <section id="historico-container" class="chat-container">
-      <h2>Histórico de Conversas</h2>
-      <p>Clique em uma sessão abaixo para ver os detalhes da conversa.</p>
-      
-      <!-- A lista de sessões salvas será preenchida aqui pelo JavaScript -->
-      <ul id="lista-sessoes"></ul>
-      
-      <hr>
-      
-      <h3>Detalhes da Conversa Selecionada</h3>
-      <!-- As mensagens da conversa clicada aparecerão aqui -->
-      <!-- Reutilizei a classe "chat-box" para aproveitar seus estilos! -->
-      <div id="visualizacao-conversa-detalhada" class="chat-box">
-          <p class="mensagem-bot">Selecione uma conversa da lista acima para visualizar as mensagens aqui.</p>
-      </div>
-  </section>
-  <!-- ================================================================= -->
-  <!--           FIM DA NOVA SEÇÃO DE HISTÓRICO DE CONVERSAS             -->
-  <!-- ================================================================= -->
-
+  
   <footer>
-    <p>© 2025 - TopizioBot | Desenvolvido por Natã E. Reis - Brasilândia do Sul/PR</p>
+    <p>© 2025 - EstiloBot</p>
   </footer>
 
   <script src="script.js"></script>

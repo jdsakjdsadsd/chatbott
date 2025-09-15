@@ -2,6 +2,7 @@ import { MongoClient, ServerApiVersion } from 'mongodb';
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import axios from 'axios'; // Corrigido: axios importado
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
 dotenv.config();
@@ -18,15 +19,12 @@ async function connectDB() {
     serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true },
   });
   await client.connect();
-  // IMPORTANTE: Seu banco de dados se chama "ifcodeLogsDB".
-  db = client.db("ifcodeLogsDB"); 
+  db = client.db("ifcodeLogsDB");
   console.log("Conectado ao MongoDB Atlas!");
   return db;
 }
 
-// Conecta ao iniciar
 connectDB();
-
 
 const app = express();
 app.use(cors());
@@ -34,38 +32,27 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // =================================================================
-//           ADICIONE A NOVA ROTA GET PARA BUSCAR HISTÓRICOS AQUI
+// ROTA GET HISTÓRICOS
 // =================================================================
 app.get('/api/chat/historicos', async (req, res) => {
   try {
-    // 1. Verificação de segurança para garantir que o banco de dados está conectado.
-    if (!db) {
-      return res.status(500).json({ error: "Conexão com o banco de dados não estabelecida." });
-    }
+    if (!db) return res.status(500).json({ error: "Conexão com o banco de dados não estabelecida." });
 
-    // 2. Pegue a coleção. Verifique no seu Atlas se o nome é "sessoesChat" ou outro.
-    const collection = db.collection("sessoesChat"); 
-
-    // 3. Busque os documentos, ordene pelos mais recentes e limite a 20.
-    //    O .toArray() é necessário no driver nativo.
+    const collection = db.collection("sessoesChat");
     const historicos = await collection.find({})
-                                      .sort({ startTime: -1 }) // -1 para ordem decrescente
+                                      .sort({ startTime: -1 })
                                       .limit(20)
                                       .toArray();
-    
-    // 4. Envie os dados encontrados como resposta.
     res.json(historicos);
-
   } catch (error) {
     console.error("[Servidor] Erro ao buscar históricos:", error);
     res.status(500).json({ error: "Erro interno ao buscar históricos de chat." });
   }
 });
-// =================================================================
-//           FIM DA NOVA ROTA
-// =================================================================
 
-
+// =================================================================
+// GOOGLE GEMINI SETUP
+// =================================================================
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
   console.error("A variável de ambiente GEMINI_API_KEY não está definida.");
@@ -74,80 +61,120 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// ... O RESTO DO SEU CÓDIGO CONTINUA EXATAMENTE IGUAL ...
-// (functions, getCurrentTime, app.post('/chat', ...), etc.)
-
-const functions = [
-  {
-    name: "getCurrentTime",
-    description: "Retorna a data e hora atual no formato pt-BR",
-    parameters: {
-      type: "object",
-      properties: {},
-      required: []
-    }
-  }
-];
-
 function getCurrentTime() {
   console.log("FUNÇÃO LOCAL: getCurrentTime() foi chamada.");
   const now = new Date();
   return { currentTime: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) };
 }
 
-const availableFunctions = {
-  getCurrentTime: getCurrentTime
-};
-
 app.post('/chat', async (req, res) => {
   try {
     const { message, history } = req.body;
-
-    if (!message) {
-      return res.status(400).json({ error: "A mensagem é obrigatória." });
-    }
+    if (!message) return res.status(400).json({ error: "A mensagem é obrigatória." });
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash", // Recomendo usar 1.5-flash que é mais recente
-      // functions, // A API do gemini-1.5-flash mudou, 'functions' agora é 'tools'
+      model: "gemini-2.5-flash",
+      systemInstruction: {
+        parts: [
+          { text: `
+            Você é o EstiloBot, um personal stylist que entende tudo sobre moda, tendências e novas coleções.
+            Sempre responda de forma educada, clara e em português do Brasil.
+            Seja simpático e objetivo.
+          ` }
+        ]
+      },
       safetySettings: [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
         { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
       ],
     });
 
-    const chatHistory = history ? history.map(h => ({
+    const chatHistory = history?.map(h => ({
       role: h.author === 'model' ? 'model' : 'user',
       parts: [{ text: h.content }]
-    })) : [];
+    })) || [];
 
     const chat = model.startChat({ history: chatHistory });
-
     console.log("Enviando mensagem para o Gemini:", message);
 
-    const result = await chat.sendMessage(message); // Simplificado para o gemini-1.5-flash
-
-    const geminiResponse = result.response;
-    const text = geminiResponse.text();
-
+    const result = await chat.sendMessage(message);
+    const text = result.response.text();
     console.log("Resposta do Gemini:", text);
 
-    res.json({
-      response: text,
-    });
-
+    res.json({ response: text });
   } catch (error) {
     console.error("Erro no endpoint /chat:", error);
-    
-    if (error.message && error.message.includes("API key not valid")) {
-      res.status(401).json({ error: "Chave de API do Gemini inválida ou não configurada corretamente." });
-    } else if (error.message && error.message.toUpperCase().includes("SAFETY")) {
-      res.status(400).json({ error: "A resposta foi bloqueada devido às configurações de segurança. Tente uma pergunta diferente." });
-    } else if (error.response && error.response.promptFeedback && error.response.promptFeedback.blockReason) {
-      res.status(400).json({ error: `A resposta foi bloqueada: ${error.response.promptFeedback.blockReason}` });
+    if (error.message?.includes("API key not valid")) {
+      res.status(401).json({ error: "Chave de API do Gemini inválida." });
+    } else if (error.message?.toUpperCase().includes("SAFETY")) {
+      res.status(400).json({ error: "Resposta bloqueada por segurança." });
     } else {
-      res.status(500).json({ error: "Ocorreu um erro interno no servidor.", details: error.message });
+      res.status(500).json({ error: "Erro interno no servidor.", details: error.message });
     }
+  }
+});
+
+// =================================================================
+// USER INFO E LOG
+// =================================================================
+app.get('/api/user-info', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for']?.split(',').shift() || req.socket.remoteAddress;
+    if (!ip) return res.status(400).json({ error: "IP não identificado" });
+
+    const geoResponse = await axios.get(`http://ip-api.com/json/${ip}?fields=status,message,country,city,query`);
+    const data = geoResponse.data;
+
+    if (data.status === 'success') {
+      return res.json({ ip: data.query, city: data.city, country: data.country });
+    } else {
+      return res.status(500).json({ error: data.message || "Geolocalização falhou" });
+    }
+  } catch (err) {
+    console.error("Erro /api/user-info:", err);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+app.post('/api/log-connection', async (req, res) => {
+  await connectDB();
+  const { ip, city, timestamp } = req.body;
+
+  if (!ip || !city || !timestamp) {
+    return res.status(400).json({ error: "Dados incompletos (ip, city, timestamp exigidos)" });
+  }
+
+  try {
+    const logEntry = { ipAddress: ip, city, connectionTime: new Date(timestamp), createdAt: new Date() };
+    const collection = db.collection("accessLogs");
+    const result = await collection.insertOne(logEntry);
+    console.log("Log inserido:", result.insertedId);
+    res.status(201).json({ message: "Log salvo", logId: result.insertedId });
+  } catch (err) {
+    console.error("Erro /api/log-connection:", err);
+    res.status(500).json({ error: "Erro ao salvar log" });
+  }
+});
+
+// =================================================================
+// SALVAR HISTÓRICO DO CHAT
+// =================================================================
+app.post('/api/chat/salvar', async (req, res) => {
+  try {
+    if (!db) return res.status(500).json({ error: "Conexão com o banco de dados não estabelecida." });
+
+    const collection = db.collection("sessoesChat");
+    const novoHistorico = {
+      userMessage: req.body.userMessage,
+      botMessage: req.body.botMessage,
+      startTime: new Date(),
+    };
+
+    await collection.insertOne(novoHistorico);
+    res.json({ success: true, historico: novoHistorico });
+  } catch (err) {
+    console.error("Erro ao salvar histórico:", err);
+    res.status(500).json({ error: "Erro ao salvar histórico." });
   }
 });
 
