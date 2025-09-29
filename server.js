@@ -9,7 +9,7 @@ import mongoose from 'mongoose';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
 // Novos imports para a área administrativanpm s
-import SystemInstruction from '"./systemInstruction.js"';
+import SystemInstruction from './systemInstruction.js';
 
 dotenv.config();
 
