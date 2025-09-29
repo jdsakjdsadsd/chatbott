@@ -1,0 +1,162 @@
+/* Importação da fonte */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+/* Estilos Globais */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #1b1b1b; /* Fundo cinza escuro */
+    color: #000000; /* Texto branco */
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+.chat-container {
+    max-width: 800px;
+    height: 100vh;
+    margin: 0 auto;
+    background-color: #1b1b1b;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box; /* Garante que padding não afete a largura/altura */
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+h1 {
+    font-size: 1.8em;
+    font-weight: 500;
+    margin: 0;
+    color: #ECECF1;
+}
+
+.descricao {
+    font-size: 0.9em;
+    color: #A0A0A0;
+    margin-top: 5px;
+}
+
+#chat-box {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+    -ms-overflow-style: none; /* Oculta a barra de rolagem no Internet Explorer/Edge */
+    scrollbar-width: none; /* Oculta a barra de rolagem no Firefox */
+}
+
+/* Oculta a barra de rolagem em navegadores WebKit (Chrome, Safari) */
+#chat-box::-webkit-scrollbar {
+    display: none;
+}
+
+#chat-form {
+    display: flex;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #424242; /* Fundo do input */
+    border-radius: 50px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+
+#user-input {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    color: #f8f8f8;
+    font-size: 1em;
+    resize: none; /* Impede que o usuário redimensione o campo */
+}
+
+#user-input::placeholder {
+    color: #8E8E98;
+}
+
+button[type="submit"] {
+    padding: 0 15px;
+    border: none;
+    background: transparent;
+    color: #8E8E98;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+button[type="submit"]:hover {
+    color: #FFFFFF;
+}
+/* Container dos botões */
+.botoes-acao {
+    display: flex;
+    justify-content: flex-end; /* Alinha os botões à direita */
+    gap: 8px; /* Espaçamento entre os botões */
+    margin-top: 10px;
+}
+
+/* Estilo geral dos botões */
+.botoes-acao button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: #555;
+    transition: color 0.2s ease;
+}
+
+.botoes-acao button:hover {
+    color: #000;
+}
+
+/* Estilo específico para cada botão (opcional) */
+.botao-curtir:hover {
+    color: #4CAF50; /* Verde */
+}
+
+.botao-descurtir:hover {
+    color: #F44336; /* Vermelho */
+} 
+/* Estilos das mensagens */
+.mensagem-usuario, .mensagem-bot {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px 0;
+    margin: 0;
+    line-height: 1.6;
+    word-wrap: break-word;
+    border-top: 1px solid #4D4D58; /* Separador sutil */
+}
+
+.mensagem-usuario {
+    background-color: #1b1b1b; /* Fundo do usuário é o mesmo do chat-container */
+    color: #FFFFFF;
+     justify-content: flex-end;
+}
+
+.mensagem-bot {
+    background-color: #1b1b1b; /* Fundo do bot */
+    color: #DCDCDC;
+}
+
+footer {
+    text-align: center;
+    font-size: 0.8em;
+    color: #949393;
+    padding: 10px;
+}
